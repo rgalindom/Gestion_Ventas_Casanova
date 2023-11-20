@@ -1,0 +1,69 @@
+<?php
+
+$datos = $_REQUEST;
+$usuario_login=$datos['usuario'];
+$password_login=$datos['password'];
+
+//$encriptar se puede eliminar siempre y cuando no tenga password encriptada en la base de datos, en nuestro caso corresponde asi
+$encriptar = crypt($password_login, 'codighash'); //poner el codigo que encripta a la password
+$tabla = "usuarios";
+$item = "usuario";
+$valor = $usuario_login;
+
+$respuesta = mdlMostrarUsuarios($tabla,$item,$valor);
+
+	if($respuesta == true && $respuesta['usuario'] == $usuario_login && $respuesta['password'] == $encriptar){
+		
+		echo "login_ok";
+		echo $respuesta['id'];
+		echo ",";
+		echo $respuesta['nombre'];
+		echo ",";
+		echo $respuesta['perfil'];
+	}else{
+		echo "error_login";
+		echo " ";
+		echo $usuario_login;		
+		echo " ";
+		echo $respuesta['usuario'];
+		echo " ";
+		echo " ";
+		echo $encriptar;
+		echo "/ ";
+		echo $password_login;
+		echo " ";
+		echo $respuesta['password'];
+	}
+
+
+function mdlMostrarUsuarios($tabla, $item, $valor) {
+	$HOST = '127.0.0.1';
+	$USER = 'usuariobd'; //cambiar con los datos correspondientes a la bd
+	$PASSWORD = 'passwordbd'; //cambiar con los datos correspondientes a la bd
+	$BDNAME = 'nombrebd'; //cambiar con los datos correspondientes a la bd
+	try {
+		$dsn = "mysql:host=".$HOST.";dbname=".$BDNAME.";";
+		$dbh = new PDO($dsn, $USER, $PASSWORD);
+	} catch (PDOException $e){
+		echo $e->getMessage();
+	}
+        
+        if($item != null){
+
+            $stmt = $dbh->prepare("SELECT * FROM $tabla  WHERE $item = :$item");
+            $stmt->bindParam(":".$item, $valor, PDO::PARAM_STR);    
+            $stmt->execute();
+            return $stmt->fetch();
+
+        }else{
+            $stmt = $dbh->prepare("SELECT * FROM $tabla");
+            //$stmt->bindParam(":".$item, $valor, PDO::PARAM_STR);    
+            $stmt->execute();
+            return $stmt->fetchall();
+        }
+       
+
+        $stmt->close();
+        $stmt = null;
+    }
+?>
